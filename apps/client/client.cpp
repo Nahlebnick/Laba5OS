@@ -1,8 +1,8 @@
+#define NOMINMAX
 #include <iostream>
 #include <Windows.h>
-#include "employee.h"
 #include "common.h"
-#define NOMINMAX
+
 
 bool sendRequest(Operation operation, int employeeID, HANDLE hPipe)
  {
@@ -16,7 +16,7 @@ bool sendRequest(Operation operation, int employeeID, HANDLE hPipe)
         std::cerr << "Failed to send request." << std::endl
         << "The last error code: " << GetLastError() << std::endl;
         std::cout << "Press any key to continue...";
-        std::cin.get();
+        _getche();
         return false;
     }
 
@@ -29,7 +29,7 @@ Response receiveResponse(HANDLE hPipe)
         
     if (!ReadFile(hPipe, &response, sizeof(Response), &bytesRead, NULL))
     {
-            response.success = false;
+        response.success = false;
     }
 
     return response;
@@ -54,9 +54,6 @@ void performReadOperation(int employeeID, HANDLE hPipe)
         std::cout << "Failed to receive response" << std::endl;
         return;
     }
-
-    std::cout << "Press any key to continue...";
-    std::cin.get();
 }
 
 void performWriteOperation(int employeeID, HANDLE hPipe) {
@@ -81,6 +78,8 @@ void performWriteOperation(int employeeID, HANDLE hPipe) {
         
         std::cout << "\nEnter new data:" << std::endl;
         
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin >> modifiedEmployee;
 
         DWORD bytesWritten;
@@ -89,7 +88,7 @@ void performWriteOperation(int employeeID, HANDLE hPipe) {
             std::cerr << "Failed to send modified data" << std::endl
             << "The last error code: " << GetLastError() << std::endl;
             std::cout << "Press any key to continue...";
-            std::cin.get();
+            _getche();
             return;
         }
 
@@ -98,36 +97,34 @@ void performWriteOperation(int employeeID, HANDLE hPipe) {
         if (response.success)
         {
             std::cout << "\nRecord updated successfully:" << std::endl;
-            std::cout << response.employee;
+            std::cout << response.employee << std::endl;
         }
         else
         {
             std::cout << "Failed to receive response" << std::endl;
             return;
         }
-
-        std::cout << "Press any key to continue...";
-        std::cin.get();
     }
 
 int main(int argc, char* argv[])
 {
     if (argc < 1) return 1;
 
-    HANDLE hPipe = CreateFile(L"\\\\.\\pipe\\emp", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    HANDLE hPipe = CreateFile("\\\\.\\pipe\\emp", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (hPipe == INVALID_HANDLE_VALUE)
     {
         std::cerr << "Connection with named pipe failed." << std::endl
         << "The last error code: " << GetLastError() << std::endl;
         std::cout << "Press any key to continue...";
-        std::cin.get();
+        _getche();
         return 0;
     }
 
     bool running = true;
     while(running)
     {
+        std::cout << "\n==== Operation Menu ====" << std::endl;
         std::cout << "1. Read employee record" << std::endl;
         std::cout << "2. Modify employee record" << std::endl;
         std::cout << "3. Exit" << std::endl;

@@ -13,12 +13,12 @@ myLib::Process::Process(const std::wstring& commandLine, bool bInheritHandles, D
     std::vector<wchar_t> cmdBuffer(commandLine.begin(), commandLine.end());
     cmdBuffer.push_back(0);
 
-    STARTUPINFO si = { sizeof(STARTUPINFO) };
+    STARTUPINFOW si = { sizeof(STARTUPINFOW) };
     pi = {};
 
     LPCWSTR lpCurrDir = currentDirectory.empty() ? nullptr : currentDirectory.c_str();
 
-    if (!CreateProcess(NULL, cmdBuffer.data(),
+    if (!CreateProcessW(NULL, cmdBuffer.data(),
         NULL, NULL, bInheritHandles, dwCreationFlags, NULL, lpCurrDir, &si, &pi))
     {
         throw std::system_error(GetLastError(), std::system_category(), "CreateProcess failed" );

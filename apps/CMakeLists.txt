@@ -6,4 +6,3 @@ target_sources(Client PRIVATE client/client.cpp)
 
 target_link_libraries(Server PRIVATE MyLib)
 target_link_libraries(Client PRIVATE MyLib)
-target_link_libraries(Client kernel32)
