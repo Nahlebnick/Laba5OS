@@ -1,0 +1,64 @@
+#include "thread.h"
+
+myLib::Thread::Thread(LPTHREAD_START_ROUTINE proc, LPVOID param)
+{
+	hThread = CreateThread(NULL, 0, proc, param, 0, &IDThread);
+	if (!hThread)
+	{
+		DWORD err = GetLastError();
+		throw std::system_error(static_cast<int>(err), std::system_category(), "CreateThread failed");
+	}
+}
+
+myLib::Thread::Thread(Thread&& other) noexcept
+    : hThread(other.hThread), IDThread(other.IDThread)
+{
+    other.hThread = nullptr;
+    other.IDThread = 0;
+}
+
+
+myLib::Thread& myLib::Thread::operator=(Thread&& other) noexcept
+{
+    if (this != &other)
+    {
+        close();
+        
+        hThread = other.hThread;
+        IDThread = other.IDThread;
+        
+        other.hThread = nullptr;
+        other.IDThread = 0;
+    }
+    return *this;
+}
+
+void myLib::Thread::join(DWORD wait)
+{
+	if (hThread)
+	{
+		DWORD res = WaitForSingleObject(hThread, wait);
+		switch (res)
+		{
+		case WAIT_OBJECT_0: break;
+		case WAIT_TIMEOUT: throw std::runtime_error("Waiting time expired!"); break;
+		case WAIT_FAILED: throw std::system_error(static_cast<int>(GetLastError()), std::system_category(), "WaitForSingleObject failed"); break;
+		default: throw std::runtime_error("Unexpected result from WaitForSingleObject!"); break;
+		}
+		close();
+	}
+}
+
+void myLib::Thread::close()
+{
+	if (hThread)
+	{
+		bool res = CloseHandle(hThread);
+		if (!res)
+		{
+			throw std::system_error(static_cast<int>(GetLastError()), std::system_category(), "CloseHandle failed");
+		}
+		hThread = nullptr;
+	}
+	IDThread = 0;
+}
